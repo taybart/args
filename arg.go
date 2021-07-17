@@ -21,9 +21,9 @@ type Arg struct {
 	Required bool        `json:"required,omitempty"`
 	Default  interface{} `json:"default,omitempty"`
 	Type     string      `json:"type,omitempty"`
-	value     *string
-  wasSet *bool
-  isBool bool
+	value    *string
+	wasSet   *bool
+	isBool   bool
 }
 
 func (arg Arg) IsBoolFlag() bool {
@@ -31,9 +31,13 @@ func (arg Arg) IsBoolFlag() bool {
 }
 
 func (arg Arg) Set(s string) error {
-  *arg.wasSet = true
-  *arg.value = s
+	*arg.wasSet = true
+	*arg.value = s
 	return nil
+}
+
+func (arg Arg) IsSet(s string) bool {
+	return *arg.wasSet
 }
 
 func (arg *Arg) Bool() bool {
@@ -47,7 +51,7 @@ func (arg *Arg) Bool() bool {
 }
 
 func (arg *Arg) Print() {
-  fmt.Printf("%s=%v wasSet=%v\n", arg.Name, *arg.value, *arg.wasSet)
+	fmt.Printf("%s=%v wasSet=%v\n", arg.Name, *arg.value, *arg.wasSet)
 }
 
 func (arg *Arg) Int() int {
@@ -57,19 +61,19 @@ func (arg *Arg) Int() int {
 		}
 		return arg.Default.(int)
 	}
-  i, err := strconv.Atoi(*arg.value)
-  if err != nil {
-    panic(fmt.Sprintf("flag provided for %s could not be converted to int", arg.Name))
-  }
+	i, err := strconv.Atoi(*arg.value)
+	if err != nil {
+		panic(fmt.Sprintf("flag provided for %s could not be converted to int", arg.Name))
+	}
 	return i
 }
 func (arg *Arg) String() string {
-  if arg.isBool {
-    if arg.Bool() {
-      return "true"
-    }
-    return "false"
-  }
+	if arg.isBool {
+		if arg.Bool() {
+			return "true"
+		}
+		return "false"
+	}
 	if !*arg.wasSet {
 		if arg.Default == nil {
 			return ""
@@ -85,13 +89,13 @@ func (arg *Arg) validate() error {
 	return nil
 }
 func (arg *Arg) init(fs *flag.FlagSet) error {
-  arg.isBool = reflect.TypeOf(arg.Default).String() == "bool"
+	arg.isBool = reflect.TypeOf(arg.Default).String() == "bool"
 
-  // init pointers
-  str := ""
-  arg.value = &str
-  ws := false
-  arg.wasSet = &ws
+	// init pointers
+	str := ""
+	arg.value = &str
+	ws := false
+	arg.wasSet = &ws
 
 	if arg.Long != "" {
 		fs.Var(arg, arg.Long, arg.Help)
