@@ -36,7 +36,10 @@ func (arg Arg) Set(s string) error {
 	return nil
 }
 
-func (arg Arg) IsSet(s string) bool {
+func (arg Arg) IsSet() bool {
+	if arg.wasSet == nil {
+		return false
+	}
 	return *arg.wasSet
 }
 
@@ -67,6 +70,7 @@ func (arg *Arg) Int() int {
 	}
 	return i
 }
+
 func (arg *Arg) String() string {
 	if arg.isBool {
 		if arg.Bool() {
@@ -74,7 +78,7 @@ func (arg *Arg) String() string {
 		}
 		return "false"
 	}
-	if !*arg.wasSet {
+	if arg.wasSet == nil || !*arg.wasSet {
 		if arg.Default == nil {
 			return ""
 		}
@@ -82,14 +86,18 @@ func (arg *Arg) String() string {
 	}
 	return *arg.value
 }
+
 func (arg *Arg) validate() error {
 	if arg.Long == "" && arg.Short == "" {
 		return fmt.Errorf("arg requires a flag name")
 	}
 	return nil
 }
+
 func (arg *Arg) init(fs *flag.FlagSet) error {
-	arg.isBool = reflect.TypeOf(arg.Default).String() == "bool"
+	if arg.Default != nil {
+		arg.isBool = reflect.TypeOf(arg.Default).String() == "bool"
+	}
 
 	// init pointers
 	str := ""

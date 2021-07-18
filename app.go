@@ -29,6 +29,17 @@ type App struct {
 	Args    map[string]*Arg `json:"args,omitempty"`
 }
 
+func (a *App) Import(app App) App {
+	if a.Args == nil {
+		a.Args = make(map[string]*Arg)
+	}
+	// prefer Name,Version,Author,About from original
+	for k, v := range app.Args {
+		a.Args[k] = v
+	}
+	return *a
+}
+
 func (a *App) Parse() error {
 	err := a.Validate()
 	if err != nil {
@@ -95,6 +106,10 @@ func (a *App) Usage() {
 
 func (a *App) Get(key string) *Arg {
 	return a.Args[key]
+}
+
+func (a *App) String(key string) string {
+	return a.Args[key].String()
 }
 
 func (a *App) CreateConfig() (string, error) {
