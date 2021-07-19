@@ -1,5 +1,8 @@
 # Args
 
+Replicating [clap](https://github.com/clap-rs/clap) in go.
+
+I started learning rust and really liked [clap](https://github.com/clap-rs/clap). I am sure this is a derivitave of something else, blah blah. I thought it would be nice for me to use.
 
 ### Usage
 
