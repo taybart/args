@@ -34,11 +34,12 @@ func ToSemver(in string) Semver {
  *************** App *************
  *********************************/
 type App struct {
-	Name    string          `json:"name,omitempty"`
-	Version Semver          `json:"version,omitempty"`
-	Author  string          `json:"author,omitempty"`
-	About   string          `json:"about,omitempty"`
-	Args    map[string]*Arg `json:"args,omitempty"`
+	Name          string          `json:"name,omitempty"`
+	Version       Semver          `json:"version,omitempty"`
+	Author        string          `json:"author,omitempty"`
+	About         string          `json:"about,omitempty"`
+	ExitOnFailure bool            `json:"exit_on_failure"`
+	Args          map[string]*Arg `json:"args,omitempty"`
 	// ArgsRequired bool            `json:"args_required,omitempty"`
 }
 
@@ -101,7 +102,7 @@ func (a *App) Parse() error {
 	for _, arg := range a.Args {
 		if arg.Required && !arg.IsSet() {
 			a.Usage()
-			os.Exit(1)
+			return ErrMissingRequired
 		}
 	}
 	return nil

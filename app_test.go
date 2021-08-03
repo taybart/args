@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
-	"github.com/taybart/log"
 )
 
 func TestNewApp(t *testing.T) {
@@ -87,7 +86,7 @@ func TestDuplicateFlags(t *testing.T) {
 
 func TestRequiredFlags(t *testing.T) {
 	is := is.New(t)
-	log.SetLevel(log.DEBUG)
+	// log.SetLevel(log.DEBUG)
 
 	// Set up app
 	app := App{
@@ -100,7 +99,6 @@ func TestRequiredFlags(t *testing.T) {
 				Short:    "c",
 				Long:     "coolaf",
 				Help:     "Makes your program cool af",
-				Default:  false,
 				Required: true,
 			},
 			"port": {
