@@ -47,10 +47,9 @@ func TestNewApp(t *testing.T) {
 	err := app.Parse()
 	is.NoErr(err)
 
-	// should default to false, boolflag to true
 	is.True(app.Get("print").Bool())
-	// set through os.Args
 	is.True(app.Get("message").String() == "test")
+	is.True(app.Get("nums").Int() == 69)
 
 }
 
