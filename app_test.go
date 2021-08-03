@@ -1,4 +1,4 @@
-package args_test
+package args
 
 import (
 	"errors"
@@ -6,23 +6,27 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
-	"github.com/taybart/args"
+	"github.com/taybart/log"
 )
 
 func TestNewApp(t *testing.T) {
 	is := is.New(t)
+	// log.SetLevel(log.VERBOSE)
+
+	// Add cli args
+	os.Args = []string{"./test", "--message=test", "-p", "-n=69"}
 
 	// Set up app
-	app := args.App{
+	app := App{
 		Name:    "My App",
 		Version: "v0.0.1",
 		Author:  "tester mctestyface <tmct@email.com>",
 		About:   "Really cool app for accomplishing stuff",
-		Args: map[string]*args.Arg{
+		Args: map[string]*Arg{
 			"print": {
 				Short:   "p",
 				Long:    "print",
-				Help:    "Prints a cool message",
+				Help:    "Allows the cool message to be printed",
 				Default: false,
 			},
 			"message": {
@@ -31,18 +35,22 @@ func TestNewApp(t *testing.T) {
 				Help:    "Sets a cool message",
 				Default: "COOL!",
 			},
+			"nums": {
+				Short:   "n",
+				Long:    "nums",
+				Help:    "A really fun number",
+				Default: 0,
+			},
 		},
 	}
-
-	// Add cli args
-	os.Args = []string{"./test", "--message=test", "-p"}
 
 	err := app.Parse()
 	is.NoErr(err)
 
-	is.True(app.Get("print").Bool())               // should default to false, boolflag to true
-	is.True(app.Get("message").String() == "test") // set through os.Args
-	app.Usage()
+	// should default to false, boolflag to true
+	is.True(app.Get("print").Bool())
+	// set through os.Args
+	is.True(app.Get("message").String() == "test")
 
 }
 
@@ -50,12 +58,12 @@ func TestDuplicateFlags(t *testing.T) {
 	is := is.New(t)
 
 	// Set up app
-	app := args.App{
+	app := App{
 		Name:    "My App",
 		Version: "v0.0.1",
 		Author:  "tester mctestyface <tmct@email.com>",
 		About:   "Really cool app for accomplishing stuff",
-		Args: map[string]*args.Arg{
+		Args: map[string]*Arg{
 			"print": {
 				Short:   "p",
 				Long:    "print",
@@ -75,5 +83,39 @@ func TestDuplicateFlags(t *testing.T) {
 	os.Args = []string{"./test", "--message=test"}
 
 	err := app.Parse()
-	is.True(errors.Is(err, args.ErrDuplicateKey))
+	is.True(errors.Is(err, ErrDuplicateKey))
+}
+
+func TestRequiredFlags(t *testing.T) {
+	is := is.New(t)
+	log.SetLevel(log.DEBUG)
+
+	// Set up app
+	app := App{
+		Name:    "My App",
+		Version: "v0.0.1",
+		Author:  "tester mctestyface <tmct@email.com>",
+		About:   "Really cool app for accomplishing stuff",
+		Args: map[string]*Arg{
+			"cool": {
+				Short:    "c",
+				Long:     "coolaf",
+				Help:     "Makes your program cool af",
+				Default:  false,
+				Required: true,
+			},
+			"port": {
+				Short:   "p",
+				Long:    "port",
+				Help:    "Port to listen on",
+				Default: 8080,
+			},
+		},
+	}
+
+	// Add cli args
+	os.Args = []string{"./test", "-p=8080"}
+
+	err := app.Parse()
+	is.True(errors.Is(err, ErrMissingRequired))
 }

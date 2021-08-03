@@ -1,22 +1,34 @@
 package args
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/taybart/log"
 )
 
 var (
-	ErrDuplicateKey = errors.New("duplicate keys")
+	ErrDuplicateKey    = errors.New("duplicate keys")
+	ErrMissingRequired = errors.New("missing required keys")
+)
+
+var (
+	flagRx = regexp.MustCompile(`(?:-+)([[:alnum:]-_]+)(?:=| )?(.*)?`)
+	// use CSL in arg to split and parse, this is stupid
+	cslRx = regexp.MustCompile("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 )
 
 type Semver string
+
+func ToSemver(in string) Semver {
+	// TODO maybe use https://github.com/Masterminds/semver
+	// or be a bad boy and write one
+	return Semver(in)
+}
 
 /*********************************
  *************** App *************
@@ -27,6 +39,7 @@ type App struct {
 	Author  string          `json:"author,omitempty"`
 	About   string          `json:"about,omitempty"`
 	Args    map[string]*Arg `json:"args,omitempty"`
+	// ArgsRequired bool            `json:"args_required,omitempty"`
 }
 
 func (a *App) Import(app App) App {
@@ -46,20 +59,50 @@ func (a *App) Parse() error {
 		return err
 	}
 
-	fs := flag.NewFlagSet(a.Name, flag.ContinueOnError)
+	// make names and bool values
 	for k, arg := range a.Args {
 		arg.Name = k
-		arg.init(fs)
+		arg.init()
 	}
 
-	a.CreateConfig()
+	// a.CreateConfig()
 
-	// test comment
-	buf := bytes.NewBuffer([]byte{}) // suppress default output
-	fs.SetOutput(buf)
-	err = fs.Parse(os.Args[1:])
-	if err != nil {
-		return err
+	log.Verbosef("os.Args: %v\n", os.Args)
+	for _, v := range os.Args {
+		log.Debugf("trying to match: %v\n", v)
+		matches := flagRx.FindAllStringSubmatch(v, -1) // regexp each flag
+		log.Debugf("result: %v\n", matches)
+		for _, arg := range a.Args {
+			log.Debugf("arg: %s %v\n", arg.Name, matches)
+			if len(matches) > 0 { // arg exists
+				name := matches[0][1]
+				if arg.Short != name && arg.Long != name {
+					log.Debug("didn't match", name)
+					continue
+				}
+				if arg.isBool {
+					if name != "" {
+						arg.SetBool(true)
+					}
+					continue
+				}
+				if len(matches[0]) > 0 { // arg was set
+					value := matches[0][2]
+					if arg.Short == name || arg.Long == name {
+						err = arg.Set(value)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+	for _, arg := range a.Args {
+		if arg.Required && !arg.IsSet() {
+			a.Usage()
+			os.Exit(1)
+		}
 	}
 	return nil
 }
@@ -103,6 +146,13 @@ func (a *App) Usage() {
 	}
 	fmt.Println(usage.String())
 }
+
+// func (a *App) Set(key string, value interface{}) *Arg {
+// 	arg := a.Args[key]
+// 	arg.Set(value)
+// 	a.Args[key] = arg
+// 	return a.Args[key]
+// }
 
 func (a *App) Get(key string) *Arg {
 	return a.Args[key]
