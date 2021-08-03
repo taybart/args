@@ -1,10 +1,11 @@
 package args
 
 import (
-	"flag"
 	"fmt"
 	"reflect"
 	"strconv"
+
+	"github.com/taybart/log"
 )
 
 /*********************************
@@ -19,10 +20,11 @@ type Arg struct {
 	Long     string      `json:"long,omitempty"`
 	Help     string      `json:"help,omitempty"`
 	Required bool        `json:"required,omitempty"`
+	CSL      bool        `json:"csl,omitempty"` // comma seperated
 	Default  interface{} `json:"default,omitempty"`
 	Type     string      `json:"type,omitempty"`
-	value    *string
-	wasSet   *bool
+	value    interface{}
+	wasSet   bool
 	isBool   bool
 }
 
@@ -30,45 +32,125 @@ func (arg Arg) IsBoolFlag() bool {
 	return arg.isBool
 }
 
-func (arg Arg) Set(s string) error {
-	*arg.wasSet = true
-	*arg.value = s
+func (arg *Arg) Set(value interface{}) error {
+	log.Verbosef("arg.Set(%s%+v%s => %s%+v%s)\n",
+		log.BoldGreen, arg.Name, log.Reset,
+		log.BoldBlue, value, log.Reset,
+	)
+	if arg.Type != "" {
+		// TODO: move to enum
+		switch arg.Type {
+		case "int":
+			arg.SetInt(value.(int))
+		case "bool":
+			arg.SetBool(value.(bool))
+		case "string":
+			arg.SetString(value.(string))
+		default:
+			arg.wasSet = true
+			arg.value = value
+			log.Verbosef("setting %s%+v%s => %s%+v%s\n",
+				log.BoldGreen, arg.Name, log.Reset,
+				log.BoldBlue, value, log.Reset,
+			)
+		}
+	}
+	switch arg.Default.(type) {
+	case int:
+		arg.SetInt(value)
+	case bool:
+		arg.SetBool(value)
+	case string:
+		arg.SetString(value)
+	default:
+		arg.wasSet = true
+		arg.value = value
+		log.Verbosef("setting %s%+v%s => %s%+v%s\n",
+			log.BoldGreen, arg.Name, log.Reset,
+			log.BoldBlue, value, log.Reset,
+		)
+	}
+
+	return nil
+}
+
+func (arg *Arg) SetBool(value interface{}) error {
+	arg.wasSet = true
+	log.Verbosef("setting %s%+v%s =>  %sbool%s %s%+v%s\n",
+		log.BoldGreen, arg.Name, log.Reset,
+		log.Yellow, log.Reset,
+		log.BoldBlue, value, log.Reset,
+	)
+	if v, ok := value.(bool); ok {
+		arg.value = v
+		return nil
+	}
+	// assume string
+	arg.value = value.(string) == "true"
+	return nil
+}
+
+func (arg *Arg) SetString(value interface{}) error {
+	arg.wasSet = true
+	log.Verbosef("setting %s%+v%s =>  %sstring%s %s%+v%s\n",
+		log.BoldGreen, arg.Name, log.Reset,
+		log.Yellow, log.Reset,
+		log.BoldBlue, value, log.Reset,
+	)
+	arg.value = value.(string)
+	return nil
+}
+
+func (arg *Arg) SetInt(value interface{}) error {
+	arg.wasSet = true
+	log.Verbosef("setting %s%+v%s =>  %sint%s %s%+v%s\n",
+		log.BoldGreen, arg.Name, log.Reset,
+		log.Yellow, log.Reset,
+		log.BoldBlue, value, log.Reset,
+	)
+
+	if v, ok := value.(int); ok {
+		arg.value = v
+		return nil
+	}
+	// assume string
+	v, err := strconv.Atoi(value.(string))
+	if err != nil {
+		return err
+	}
+	arg.value = v
 	return nil
 }
 
 func (arg Arg) IsSet() bool {
-	if arg.wasSet == nil {
-		return false
+	if arg.Default != nil {
+		return true
 	}
-	return *arg.wasSet
+	return arg.wasSet
 }
 
 func (arg *Arg) Bool() bool {
-	if !*arg.wasSet {
+	if !arg.wasSet {
 		if arg.Default == nil {
 			return false
 		}
 		return arg.Default.(bool)
 	}
-	return *arg.value == "true"
+	return arg.value.(bool)
 }
 
 func (arg *Arg) Print() {
-	fmt.Printf("%s=%v wasSet=%v\n", arg.Name, *arg.value, *arg.wasSet)
+	fmt.Printf("%s=%v wasSet=%v\n", arg.Name, arg.value, arg.wasSet)
 }
 
 func (arg *Arg) Int() int {
-	if !*arg.wasSet {
+	if !arg.wasSet {
 		if arg.Default == nil {
 			return 0
 		}
 		return arg.Default.(int)
 	}
-	i, err := strconv.Atoi(*arg.value)
-	if err != nil {
-		panic(fmt.Sprintf("flag provided for %s could not be converted to int", arg.Name))
-	}
-	return i
+	return arg.value.(int)
 }
 
 func (arg *Arg) String() string {
@@ -78,13 +160,25 @@ func (arg *Arg) String() string {
 		}
 		return "false"
 	}
-	if arg.wasSet == nil || !*arg.wasSet {
+	if !arg.wasSet {
 		if arg.Default == nil {
 			return ""
 		}
+		return fmt.Sprintf("%v", arg.Default)
+	}
+	switch arg.value.(type) {
+	case bool:
+		return fmt.Sprintf("%t", arg.Bool())
+	case int:
+		return fmt.Sprintf("%d", arg.Int())
+	case string:
+		if s, ok := arg.value.(string); ok {
+			return s
+		}
+	default:
 		return arg.Default.(string)
 	}
-	return *arg.value
+	return ""
 }
 
 func (arg *Arg) validate() error {
@@ -94,22 +188,33 @@ func (arg *Arg) validate() error {
 	return nil
 }
 
-func (arg *Arg) init(fs *flag.FlagSet) error {
+func (arg *Arg) init() error {
+	arg.isBool = false
 	if arg.Default != nil {
-		arg.isBool = reflect.TypeOf(arg.Default).String() == "bool"
+		log.Debugf("value %s is type %s\n", arg.Name, reflect.TypeOf(arg.Default).String())
+		switch arg.Default.(type) {
+		case bool:
+			arg.isBool = true
+			arg.value = arg.Default.(bool)
+		case string:
+			arg.value = arg.Default.(string)
+		case int:
+			arg.value = arg.Default.(int)
+		}
+		// log.Debug(arg.isBool)
 	}
 
-	// init pointers
-	str := ""
-	arg.value = &str
-	ws := false
-	arg.wasSet = &ws
+	// // init pointers
+	// // str := ""
+	// // arg.value = &str
+	// // ws := false
+	// // arg.wasSet = ws
 
-	if arg.Long != "" {
-		fs.Var(arg, arg.Long, arg.Help)
-	}
-	if arg.Short != "" {
-		fs.Var(arg, arg.Short, arg.Help)
-	}
+	// if arg.Long != "" {
+	// 	fs.Var(arg, arg.Long, arg.Help)
+	// }
+	// if arg.Short != "" {
+	// 	fs.Var(arg, arg.Short, arg.Help)
+	// }
 	return nil
 }
