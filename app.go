@@ -163,6 +163,14 @@ func (a *App) String(key string) string {
 	return a.Args[key].String()
 }
 
+func (a *App) Int(key string) int {
+	return a.Args[key].Int()
+}
+
+func (a *App) File(key string) []byte {
+	return a.Args[key].File()
+}
+
 func (a *App) CreateConfig() (string, error) {
 	b, err := json.Marshal(a.Args)
 	return string(b), err

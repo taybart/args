@@ -35,8 +35,6 @@ var (
 )
 
 func main() {
-	// Set up app
-  app.Parse()
   if err := run(); err != nil {
     fmt.Println(err)
     os.Exit(1)
@@ -44,7 +42,12 @@ func main() {
 }
 
 func run() error {
-  fmt.Println(app.Get("port").Int())
+  // Set up app
+  err := app.Parse()
+  if err != nil {
+    return err
+  }
+  fmt.Println(app.Int("port"))
   return nil
 }
 ```
