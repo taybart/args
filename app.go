@@ -19,6 +19,7 @@ var (
 var (
 	flagRx = regexp.MustCompile(`(?:-+)([[:alnum:]-_]+)(?:=| )?(.*)?`)
 	// use CSL in arg to split and parse, this is stupid
+	// DUMB should use split
 	cslRx = regexp.MustCompile("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 )
 
@@ -167,6 +168,11 @@ func (a *App) Int(key string) int {
 func (a *App) Is(key string) bool {
 	return a.Args[key].Bool()
 }
+
+func (a *App) True(key string) bool {
+	return a.Args[key].Bool()
+}
+
 func (a *App) File(key string) []byte {
 	return a.Args[key].File()
 }
