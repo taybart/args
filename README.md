@@ -26,7 +26,6 @@ var (
 		Args: map[string]*args.Arg{
 			"port": {
 				Short:   "p",
-				Long:    "port",
 				Help:    "Port to listen on",
 				Default: 8080,
 			},
