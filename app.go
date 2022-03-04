@@ -77,7 +77,7 @@ func (a *App) Parse() error {
 			log.Debugf("arg: %s %v\n", arg.Name, matches)
 			if len(matches) > 0 { // arg exists
 				name := matches[0][1]
-				if arg.Short != name && arg.Long != name {
+				if arg.Short != name && arg.Name != name {
 					log.Debug("didn't match", name)
 					continue
 				}
@@ -89,7 +89,7 @@ func (a *App) Parse() error {
 				}
 				if len(matches[0]) > 0 { // arg was set
 					value := matches[0][2]
-					if arg.Short == name || arg.Long == name {
+					if arg.Short == name || arg.Name == name {
 						err = arg.Set(value)
 						if err != nil {
 							return err
@@ -118,16 +118,13 @@ func (a *App) Validate() error {
 			issues = append(issues, issue)
 			continue
 		}
-		if defined[arg.Long] != "" {
-			issue := fmt.Sprintf("flag %s already used in arg %s", arg.Long, defined[arg.Long])
+		arg.Name = k
+		if defined[arg.Name] != "" {
+			issue := fmt.Sprintf("flag %s already used in arg %s", arg.Name, defined[arg.Name])
 			issues = append(issues, issue)
 			continue
 		}
-		arg.Name = k
 		arg.validate()
-		if arg.Long != "" {
-			defined[arg.Long] = k
-		}
 		if arg.Short != "" {
 			defined[arg.Short] = k
 		}
@@ -143,7 +140,7 @@ func (a *App) Usage() {
 	var usage strings.Builder
 	fmt.Fprintf(&usage, "%s%s%s %s [option]\n  %s\n", log.Blue, a.Name, log.Reset, os.Args[0], a.About)
 	for k, arg := range a.Args {
-		fmt.Fprintf(&usage, "    %s%s%s: -%s, --%s\n\t%s\n", log.Blue, k, log.Reset, arg.Short, arg.Long, arg.Help)
+		fmt.Fprintf(&usage, "    %s%s%s: -%s, --%s\n\t%s\n", log.Blue, k, log.Reset, arg.Short, arg.Name, arg.Help)
 	}
 	fmt.Println(usage.String())
 }

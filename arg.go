@@ -16,9 +16,9 @@ import (
 type Arg struct {
 	// in config if this is not defined long is used
 	// could also be embedded (ex. logs.verbose)
-	Name     string      `json:"name,omitempty"`
-	Short    string      `json:"short,omitempty"`
-	Long     string      `json:"long,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Short string `json:"short,omitempty"`
+	// Long     string      `json:"long,omitempty"`
 	Help     string      `json:"help,omitempty"`
 	Required bool        `json:"required,omitempty"`
 	CSL      bool        `json:"csl,omitempty"` // comma seperated
@@ -27,6 +27,9 @@ type Arg struct {
 	value    interface{}
 	wasSet   bool
 	isBool   bool
+	// new
+	Before func()
+	After  func()
 }
 
 func (arg Arg) IsBoolFlag() bool {
@@ -192,7 +195,7 @@ func (arg *Arg) File() []byte {
 }
 
 func (arg *Arg) validate() error {
-	if arg.Long == "" && arg.Short == "" {
+	if arg.Name == "" && arg.Short == "" {
 		return fmt.Errorf("arg requires a flag name")
 	}
 	return nil

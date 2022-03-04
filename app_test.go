@@ -24,19 +24,16 @@ func TestNewApp(t *testing.T) {
 		Args: map[string]*Arg{
 			"print": {
 				Short:   "p",
-				Long:    "print",
 				Help:    "Allows the cool message to be printed",
 				Default: false,
 			},
 			"message": {
 				Short:   "m",
-				Long:    "message",
 				Help:    "Sets a cool message",
 				Default: "COOL!",
 			},
 			"nums": {
 				Short:   "n",
-				Long:    "nums",
 				Help:    "A really fun number",
 				Default: 0,
 			},
@@ -64,13 +61,11 @@ func TestDuplicateFlags(t *testing.T) {
 		Args: map[string]*Arg{
 			"print": {
 				Short:   "p",
-				Long:    "print",
 				Help:    "Prints a cool message",
 				Default: false,
 			},
 			"port": {
 				Short:   "p",
-				Long:    "port",
 				Help:    "Port to listen on",
 				Default: 8080,
 			},
@@ -97,13 +92,11 @@ func TestRequiredFlags(t *testing.T) {
 		Args: map[string]*Arg{
 			"cool": {
 				Short:    "c",
-				Long:     "coolaf",
 				Help:     "Makes your program cool af",
 				Required: true,
 			},
 			"port": {
 				Short:   "p",
-				Long:    "port",
 				Help:    "Port to listen on",
 				Default: 8080,
 			},
