@@ -164,6 +164,9 @@ func (a *App) Int(key string) int {
 	return a.Args[key].Int()
 }
 
+func (a *App) Is(key string) bool {
+	return a.Args[key].Bool()
+}
 func (a *App) File(key string) []byte {
 	return a.Args[key].File()
 }
