@@ -109,3 +109,42 @@ func TestRequiredFlags(t *testing.T) {
 	err := app.Parse()
 	is.True(errors.Is(err, ErrMissingRequired))
 }
+
+func TestUnmarshal(t *testing.T) {
+	is := is.New(t)
+	// log.SetLevel(log.DEBUG)
+
+	// Set up app
+	app := App{
+		Name:    "My App",
+		Version: "v0.0.1",
+		Author:  "tester mctestyface <tmct@email.com>",
+		About:   "Really cool app for accomplishing stuff",
+		Args: map[string]*Arg{
+			"port": {
+				Short:   "p",
+				Help:    "Port to listen on",
+				Default: 8080,
+			},
+			"addr": {
+				Short:   "a",
+				Help:    "Address",
+				Default: "localhost",
+			},
+		},
+	}
+
+	testStruct := struct {
+		Port    int    `arg:"port"`
+		Address string `arg:"addr"`
+	}{}
+
+	// Add cli args
+	os.Args = []string{"./test", "-p=8000", "-a=example.com"}
+
+	err := app.Parse()
+	is.NoErr(err)
+
+	err = app.Marshal(&testStruct)
+	is.NoErr(err)
+}

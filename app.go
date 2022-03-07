@@ -1,10 +1,10 @@
 package args
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -146,12 +146,37 @@ func (a *App) Usage() {
 	fmt.Println(usage.String())
 }
 
-// func (a *App) Set(key string, value interface{}) *Arg {
-// 	arg := a.Args[key]
-// 	arg.Set(value)
-// 	a.Args[key] = arg
-// 	return a.Args[key]
-// }
+func (a *App) Marshal(i interface{}) error {
+
+	v := reflect.ValueOf(i).Elem()
+	if !v.CanAddr() {
+		return fmt.Errorf("cannot assign to the item passed, item must be a pointer in order to assign")
+	}
+
+	// TODO: return better casting errors
+	for index := 0; index < v.NumField(); index++ {
+		field := v.Type().Field(index)
+
+		tag := field.Tag.Get("arg")
+		typ := field.Type.Name()
+
+		log.Debugf("%v (%v), tag: %v\n", field.Name, typ, a.Get(tag))
+
+		f := v.Field(index)
+		switch typ {
+		case "int":
+			f.Set(reflect.ValueOf(a.Int(tag)))
+		case "bool":
+			f.Set(reflect.ValueOf(a.Is(tag)))
+		case "string":
+			f.Set(reflect.ValueOf(a.String(tag)))
+		default:
+			return fmt.Errorf("unknown type %s", typ)
+		}
+
+	}
+	return nil
+}
 
 func (a *App) Get(key string) *Arg {
 	return a.Args[key]
@@ -177,9 +202,24 @@ func (a *App) File(key string) []byte {
 	return a.Args[key].File()
 }
 
-func (a *App) CreateConfig() (string, error) {
-	b, err := json.Marshal(a.Args)
-	return string(b), err
+func (a App) getType(key, t string) (interface{}, error) {
+	switch t {
+	case "int":
+		return a.Int(key), nil
+	default:
+		return nil, fmt.Errorf("unknown type")
+	}
 }
 
-func (a *App) ConfigRead() {}
+// func (a *App) CreateConfig() (string, error) {
+// 	b, err := json.Marshal(a.Args)
+// 	return string(b), err
+// }
+
+// func (a *App) ConfigRead() {}
+// func (a *App) Set(key string, value interface{}) *Arg {
+// 	arg := a.Args[key]
+// 	arg.Set(value)
+// 	a.Args[key] = arg
+// 	return a.Args[key]
+// }

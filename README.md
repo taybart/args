@@ -47,6 +47,15 @@ func run() error {
     return err
   }
   fmt.Println(app.Int("port"))
+
+  // use go struct
+	config := struct {
+		Port    int    `arg:"port"`
+	}{}
+  if err = app.Marshal(&config); err != nil {
+    return err
+  }
+  fmt.Println(config.Port)
   return nil
 }
 ```
