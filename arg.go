@@ -16,12 +16,10 @@ import (
 type Arg struct {
 	// in config if this is not defined long is used
 	// could also be embedded (ex. logs.verbose)
-	Name  string `json:"name,omitempty"`
-	Short string `json:"short,omitempty"`
-	// Long     string      `json:"long,omitempty"`
+	Name     string      `json:"name,omitempty"`
+	Short    string      `json:"short,omitempty"`
 	Help     string      `json:"help,omitempty"`
 	Required bool        `json:"required,omitempty"`
-	CSL      bool        `json:"csl,omitempty"` // comma seperated
 	Default  interface{} `json:"default,omitempty"`
 	Type     string      `json:"type,omitempty"`
 	value    interface{}
@@ -214,20 +212,6 @@ func (arg *Arg) init() error {
 		case int:
 			arg.value = arg.Default.(int)
 		}
-		// log.Debug(arg.isBool)
 	}
-
-	// // init pointers
-	// // str := ""
-	// // arg.value = &str
-	// // ws := false
-	// // arg.wasSet = ws
-
-	// if arg.Long != "" {
-	// 	fs.Var(arg, arg.Long, arg.Help)
-	// }
-	// if arg.Short != "" {
-	// 	fs.Var(arg, arg.Short, arg.Help)
-	// }
 	return nil
 }

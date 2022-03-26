@@ -10,10 +10,10 @@ import (
 
 func TestNewApp(t *testing.T) {
 	is := is.New(t)
-	// log.SetLevel(log.VERBOSE)
+	// log.SetLevel(log.DEBUG)
 
 	// Add cli args
-	os.Args = []string{"./test", "--message=test", "-p", "-n=69"}
+	os.Args = []string{"./test", "--message=test", "-p", "-n", "69"}
 
 	// Set up app
 	app := App{
@@ -95,24 +95,29 @@ func TestRequiredFlags(t *testing.T) {
 				Help:     "Makes your program cool af",
 				Required: true,
 			},
-			"port": {
-				Short:   "p",
-				Help:    "Port to listen on",
-				Default: 8080,
+			"lame": {
+				Short:    "l",
+				Help:     "Makes your program lame af",
+				Required: true,
 			},
 		},
 	}
 
 	// Add cli args
-	os.Args = []string{"./test", "-p=8080"}
+	os.Args = []string{"./test"}
 
 	err := app.Parse()
 	is.True(errors.Is(err, ErrMissingRequired))
 }
 
-func TestUnmarshal(t *testing.T) {
+func TestMarshal(t *testing.T) {
 	is := is.New(t)
 	// log.SetLevel(log.DEBUG)
+
+	testStruct := struct {
+		Port    int    `arg:"port"`
+		Address string `arg:"addr"`
+	}{}
 
 	// Set up app
 	app := App{
@@ -132,12 +137,11 @@ func TestUnmarshal(t *testing.T) {
 				Default: "localhost",
 			},
 		},
+		App: &struct {
+			Port int    `arg:"port"`
+			Addr string `arg:"addr"`
+		}{},
 	}
-
-	testStruct := struct {
-		Port    int    `arg:"port"`
-		Address string `arg:"addr"`
-	}{}
 
 	// Add cli args
 	os.Args = []string{"./test", "-p=8000", "-a=example.com"}

@@ -18,9 +18,6 @@ var (
 
 var (
 	flagRx = regexp.MustCompile(`(?:-+)([[:alnum:]-_]+)(?:=| )?(.*)?`)
-	// use CSL in arg to split and parse, this is stupid
-	// DUMB should use split
-	cslRx = regexp.MustCompile("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 )
 
 type Semver string
@@ -41,7 +38,7 @@ type App struct {
 	About         string          `json:"about,omitempty"`
 	ExitOnFailure bool            `json:"exit_on_failure"`
 	Args          map[string]*Arg `json:"args,omitempty"`
-	// ArgsRequired bool            `json:"args_required,omitempty"`
+	App           interface{}     // marshal result
 }
 
 func (a *App) Import(app App) App {
@@ -67,10 +64,8 @@ func (a *App) Parse() error {
 		arg.init()
 	}
 
-	// a.CreateConfig()
-
 	log.Verbosef("os.Args: %v\n", os.Args)
-	for _, v := range os.Args {
+	for i, v := range os.Args {
 		log.Debugf("trying to match: %v\n", v)
 		matches := flagRx.FindAllStringSubmatch(v, -1) // regexp each flag
 		log.Debugf("result: %v\n", matches)
@@ -78,6 +73,10 @@ func (a *App) Parse() error {
 			log.Debugf("arg: %s %v\n", arg.Name, matches)
 			if len(matches) > 0 { // arg exists
 				name := matches[0][1]
+				if name == "h" || name == "help" {
+					a.Usage()
+					return nil
+				}
 				if arg.Short != name && arg.Name != name {
 					log.Debug("didn't match", name)
 					continue
@@ -89,22 +88,50 @@ func (a *App) Parse() error {
 					continue
 				}
 				if len(matches[0]) > 0 { // arg was set
-					value := matches[0][2]
 					if arg.Short == name || arg.Name == name {
-						err = arg.Set(value)
-						if err != nil {
-							return err
+						value := matches[0][2]
+						if value != "" {
+							err = arg.Set(value)
+							if err != nil {
+								return err
+							}
+						} else {
+							i++
+							next := os.Args[i]
+							if next[0] == '-' {
+								return fmt.Errorf("flag given but argument (%s) not set", arg.Name)
+							}
+							err = arg.Set(next)
+							if err != nil {
+								return err
+							}
+							continue
 						}
 					}
 				}
+
 			}
 		}
 	}
+	var req string
 	for _, arg := range a.Args {
 		if arg.Required && !arg.IsSet() {
-			a.Usage()
-			return ErrMissingRequired
+			if req == "" {
+				req = arg.Name
+			} else {
+				req = fmt.Sprintf("%s,%s", req, arg.Name)
+			}
 		}
+	}
+
+	if len(req) > 0 {
+		fmt.Printf("Missing required arguments: %s%s%s\n", log.Red, req, log.Reset)
+		a.Usage()
+		return ErrMissingRequired
+	}
+
+	if err := a.MarshalInternal(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -139,11 +166,27 @@ func (a *App) Validate() error {
 
 func (a *App) Usage() {
 	var usage strings.Builder
-	fmt.Fprintf(&usage, "%s%s%s %s [option]\n  %s\n", log.Blue, a.Name, log.Reset, os.Args[0], a.About)
-	for k, arg := range a.Args {
-		fmt.Fprintf(&usage, "    %s%s%s: -%s, --%s\n\t%s\n", log.Blue, k, log.Reset, arg.Short, arg.Name, arg.Help)
+	// fmt.Fprintf(&usage, "%s%s%s: %s%s%s\n%s [options]\n",
+	// log.Blue, a.Name, log.Reset, log.Gray, a.About, log.Reset, os.Args[0])
+	l := len(a.Args)
+	for _, arg := range a.Args {
+		l--
+		fmt.Fprintf(&usage, "    --%s, -%s:\n\t%s", arg.Name, arg.Short, arg.Help)
+		if l > 0 {
+			fmt.Fprintf(&usage, "\n")
+		}
+
 	}
 	fmt.Println(usage.String())
+}
+
+func (a *App) MarshalInternal() error {
+	if a.App != nil {
+		if err := a.Marshal(a.App); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (a *App) Marshal(i interface{}) error {
@@ -201,25 +244,3 @@ func (a *App) True(key string) bool {
 func (a *App) File(key string) []byte {
 	return a.Args[key].File()
 }
-
-func (a App) getType(key, t string) (interface{}, error) {
-	switch t {
-	case "int":
-		return a.Int(key), nil
-	default:
-		return nil, fmt.Errorf("unknown type")
-	}
-}
-
-// func (a *App) CreateConfig() (string, error) {
-// 	b, err := json.Marshal(a.Args)
-// 	return string(b), err
-// }
-
-// func (a *App) ConfigRead() {}
-// func (a *App) Set(key string, value interface{}) *Arg {
-// 	arg := a.Args[key]
-// 	arg.Set(value)
-// 	a.Args[key] = arg
-// 	return a.Args[key]
-// }
