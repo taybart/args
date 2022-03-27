@@ -18,19 +18,19 @@ import (
 
 
 var (
-	app = args.App{
-		Name:    "My App",
-		Version: "v0.0.1",
-		Author:  "Tay Bart <taybart@email.com>",
-		About:   "Really cool app for accomplishing stuff",
-		Args: map[string]*args.Arg{
-			"port": {
-				Short:   "p",
-				Help:    "Port to listen on",
-				Default: 8080,
-			},
-		},
-	}
+  app = args.App{
+    Name:    "My App",
+    Version: "v0.0.1",
+    Author:  "Tay Bart <taybart@email.com>",
+    About:   "Really cool app for accomplishing stuff",
+    Args: map[string]*args.Arg{
+      "port": {
+        Short:   "p",
+        Help:    "Port to listen on",
+        Default: 8080,
+      },
+    },
+  }
 )
 
 func main() {
@@ -49,9 +49,9 @@ func run() error {
   fmt.Println(app.Int("port"))
 
   // use go struct
-	config := struct {
-		Port    int    `arg:"port"`
-	}{}
+  config := struct {
+    Port    int    `arg:"port"`
+  }{}
   if err = app.Marshal(&config); err != nil {
     return err
   }
