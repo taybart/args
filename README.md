@@ -42,8 +42,7 @@ func main() {
 
 func run() error {
   // Set up app
-  err := app.Parse()
-  if err != nil {
+  if err := app.Parse(); err != nil {
     return err
   }
   fmt.Println(app.Int("port"))
