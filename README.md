@@ -44,7 +44,7 @@ func run() error {
   // Set up app
   if err := app.Parse(); err != nil {
     // user passed -h or --help
-    if errors.Is(args.ErrUsageRequested, err) {
+    if errors.Is(err, args.ErrUsageRequested) {
         return nil
     }
     return err
