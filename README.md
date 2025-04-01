@@ -43,6 +43,10 @@ func main() {
 func run() error {
   // Set up app
   if err := app.Parse(); err != nil {
+    // user passed -h or --help
+    if errors.Is(args.ErrUsageRequested, err) {
+        return nil
+    }
     return err
   }
   fmt.Println(app.Int("port"))
@@ -59,7 +63,7 @@ func run() error {
 }
 ```
 
-*Note:* if the variable is supposed to be treated as a boolean, `Default: false` is required 
+_Note:_ if the variable is supposed to be treated as a boolean, `Default: false` is required
 
 Reserved flags:
 

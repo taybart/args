@@ -14,6 +14,7 @@ import (
 var (
 	ErrDuplicateKey    = errors.New("duplicate keys")
 	ErrMissingRequired = errors.New("missing required keys")
+	ErrUsageRequested  = errors.New("usage requested")
 )
 
 var (
@@ -75,7 +76,7 @@ func (a *App) Parse() error {
 				name := matches[0][1]
 				if name == "h" || name == "help" {
 					a.Usage()
-					return nil
+					return ErrUsageRequested
 				}
 				if arg.Short != name && arg.Name != name {
 					log.Debug("didn't match", name)
@@ -231,6 +232,10 @@ func (a *App) String(key string) string {
 
 func (a *App) Int(key string) int {
 	return a.Args[key].Int()
+}
+
+func (a *App) Bool(key string) bool {
+	return a.Args[key].Bool()
 }
 
 func (a *App) Is(key string) bool {
