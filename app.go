@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/taybart/log"
@@ -166,12 +167,19 @@ func (a *App) Validate() error {
 }
 
 func (a *App) Usage() {
-	var usage strings.Builder
-	// fmt.Fprintf(&usage, "%s%s%s: %s%s%s\n%s [options]\n",
-	// log.Blue, a.Name, log.Reset, log.Gray, a.About, log.Reset, os.Args[0])
+
+	// Sort args in alphabetical order
 	l := len(a.Args)
-	for _, arg := range a.Args {
+	keys := make([]string, 0, l)
+	for key := range a.Args {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	var usage strings.Builder
+	for _, key := range keys {
 		l--
+		arg := a.Args[key]
 		fmt.Fprintf(&usage, "    --%s, -%s:\n\t%s", arg.Name, arg.Short, arg.Help)
 		if l > 0 {
 			fmt.Fprintf(&usage, "\n")
