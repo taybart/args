@@ -194,7 +194,7 @@ func (a *App) Marshal(i interface{}) error {
 
 	v := reflect.ValueOf(i).Elem()
 	if !v.CanAddr() {
-		return fmt.Errorf("cannot assign to the item passed, item must be a pointer in order to assign")
+		return fmt.Errorf("marshal interface must be a pointer in order to assign")
 	}
 
 	// TODO: return better casting errors
@@ -205,6 +205,9 @@ func (a *App) Marshal(i interface{}) error {
 		typ := field.Type.Name()
 
 		log.Debugf("%v (%v), tag: %v\n", field.Name, typ, a.Get(tag))
+		if a.Get(tag) == nil { // we don't have that tag
+			continue
+		}
 
 		f := v.Field(index)
 		switch typ {
