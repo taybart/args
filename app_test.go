@@ -10,7 +10,6 @@ import (
 
 func TestNewApp(t *testing.T) {
 	is := is.New(t)
-	// log.SetLevel(log.DEBUG)
 
 	// Add cli args
 	os.Args = []string{"./test", "--message=test", "-p", "-n", "69"}
@@ -110,9 +109,31 @@ func TestRequiredFlags(t *testing.T) {
 	is.True(errors.Is(err, ErrMissingRequired))
 }
 
+func TestOverrideHelp(t *testing.T) {
+	is := is.New(t)
+
+	// Set up app
+	app := App{
+		Name:    "My App",
+		Version: "v0.0.1",
+		Author:  "tester mctestyface <tmct@email.com>",
+		About:   "Really cool app for accomplishing stuff",
+		Args: map[string]*Arg{
+			"help": {
+				Short:   "h",
+				Default: false,
+			},
+		},
+	}
+
+	// Add cli args
+	os.Args = []string{"./test", "-h"}
+
+	is.NoErr(app.Parse())
+}
+
 func TestMarshal(t *testing.T) {
 	is := is.New(t)
-	// log.SetLevel(log.DEBUG)
 
 	testStruct := struct {
 		Port    int    `arg:"port"`

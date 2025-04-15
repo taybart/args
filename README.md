@@ -65,4 +65,4 @@ func run() error {
 
 _Note:_ if the variable is supposed to be treated as a boolean, `Default: false` is required
 
-If `-h,-help,--help` are not specified in the app definition, one is provided automatically. It will return the error `args.ErrUsageRequested` when the app is parsed
+If `-h,-help,--help` are not specified in the app definition, one is provided automatically. It will return the error `args.ErrUsageRequested` when the app is parsed. Make sure to add `Default: false` if you do override the help flag

@@ -94,7 +94,7 @@ func (a *App) Parse() error {
 					if arg.Short == name || arg.Name == name {
 						value := matches[0][2]
 						if value != "" {
-							err = arg.Set(value)
+							err := arg.Set(value)
 							if err != nil {
 								return err
 							}
@@ -109,7 +109,7 @@ func (a *App) Parse() error {
 							if next[0] == '-' {
 								return fmt.Errorf("flag given but argument (%s) not set", arg.Name)
 							}
-							err = arg.Set(next)
+							err := arg.Set(next)
 							if err != nil {
 								return err
 							}
