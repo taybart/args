@@ -2,7 +2,7 @@ package args
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"strconv"
 
@@ -185,7 +185,7 @@ func (arg *Arg) String() string {
 
 func (arg *Arg) File() []byte {
 	fn := arg.String()
-	b, err := ioutil.ReadFile(fn)
+	b, err := os.ReadFile(fn)
 	if err != nil {
 		panic(err)
 	}

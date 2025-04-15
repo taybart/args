@@ -41,6 +41,7 @@ type App struct {
 	ExitOnFailure bool            `json:"exit_on_failure"`
 	Args          map[string]*Arg `json:"args,omitempty"`
 	App           interface{}     // marshal result
+	overrideHelp  bool
 }
 
 func (a *App) Import(app App) App {
@@ -55,8 +56,8 @@ func (a *App) Import(app App) App {
 }
 
 func (a *App) Parse() error {
-	err := a.Validate()
-	if err != nil {
+
+	if err := a.Validate(); err != nil {
 		return err
 	}
 
@@ -75,7 +76,7 @@ func (a *App) Parse() error {
 			log.Debugf("arg: %s %v\n", arg.Name, matches)
 			if len(matches) > 0 { // arg exists
 				name := matches[0][1]
-				if name == "h" || name == "help" {
+				if (name == "h" || name == "help") && !a.overrideHelp {
 					a.Usage()
 					return ErrUsageRequested
 				}
@@ -162,6 +163,9 @@ func (a *App) Validate() error {
 		arg.validate()
 		if arg.Short != "" {
 			defined[arg.Short] = k
+		}
+		if arg.Short == "h" || arg.Name == "help" {
+			a.overrideHelp = true
 		}
 	}
 	if len(issues) > 0 {
