@@ -99,6 +99,11 @@ func (a *App) Parse() error {
 							}
 						} else {
 							i++
+							if i > len(os.Args)-1 {
+								// this should also take into account if the user just didn't provide an arg
+								// and it was the last in the list
+								return fmt.Errorf("argument was not provided with a value, this might mean that it is a boolean and Default was not specified")
+							}
 							next := os.Args[i]
 							if next[0] == '-' {
 								return fmt.Errorf("flag given but argument (%s) not set", arg.Name)
@@ -169,19 +174,24 @@ func (a *App) Validate() error {
 func (a *App) Usage() {
 
 	// Sort args in alphabetical order
-	l := len(a.Args)
-	keys := make([]string, 0, l)
+	keys := make([]string, 0, len(a.Args))
 	for key := range a.Args {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 
 	var usage strings.Builder
-	for _, key := range keys {
-		l--
+	for i, key := range keys {
 		arg := a.Args[key]
-		fmt.Fprintf(&usage, "    --%s, -%s:\n\t%s", arg.Name, arg.Short, arg.Help)
-		if l > 0 {
+		if arg == nil {
+			continue
+		}
+		fmt.Fprintf(&usage, "    --%s", arg.Name)
+		if arg.Short != "" {
+			fmt.Fprintf(&usage, ", -%s", arg.Short)
+		}
+		fmt.Fprintf(&usage, ":\n\t%s", arg.Help)
+		if i < len(a.Args)-1 {
 			fmt.Fprintf(&usage, "\n")
 		}
 
