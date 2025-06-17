@@ -3,6 +3,7 @@ package args
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"regexp"
@@ -41,7 +42,9 @@ type App struct {
 	ExitOnFailure bool            `json:"exit_on_failure"`
 	Args          map[string]*Arg `json:"args,omitempty"`
 	App           interface{}     // marshal result
-	overrideHelp  bool
+	// Override default Usage display function
+	UsageFunc    func(Usage)
+	overrideHelp bool
 }
 
 func (a *App) Import(app App) App {
@@ -175,6 +178,30 @@ func (a *App) Validate() error {
 	return nil
 }
 
+type Usage struct {
+	Args        map[string]*Arg
+	OrderedKeys []string
+	Name        string
+	Version     Semver
+	Author      string
+	About       string
+}
+
+func (u Usage) BuildFlagString(usage io.Writer, keys []string) {
+	for _, key := range keys {
+		arg := u.Args[key]
+		if arg == nil {
+			continue
+		}
+		fmt.Fprintf(usage, "    --%s", arg.Name)
+		if arg.Short != "" {
+			fmt.Fprintf(usage, ", -%s", arg.Short)
+		}
+		fmt.Fprintf(usage, ":\n\t%s", arg.Help)
+		fmt.Fprintf(usage, "\n")
+	}
+}
+
 func (a *App) Usage() {
 
 	// Sort args in alphabetical order
@@ -183,6 +210,18 @@ func (a *App) Usage() {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+
+	if a.UsageFunc != nil {
+		a.UsageFunc(Usage{
+			Args:        a.Args,
+			OrderedKeys: keys,
+			Name:        a.Name,
+			Version:     a.Version,
+			Author:      a.Author,
+			About:       a.About,
+		})
+		return
+	}
 
 	var usage strings.Builder
 	for i, key := range keys {

@@ -24,14 +24,33 @@ var (
     Author:  "Tay Bart <taybart@email.com>",
     About:   "Really cool app for accomplishing stuff",
     Args: map[string]*args.Arg{
+      "zero": {
+        Short:   "z",
+        Help:    "If divide by zero is ok",
+        Default: false,
+      },
       "port": {
         Short:   "p",
         Help:    "Port to listen on",
         Default: 8080,
       },
     },
+    // optional usage override function
+    UsageFunc: usageOverride,
   }
 )
+
+func usageOverride(u args.Usage) {
+    // ordered flag slice, default is alphabetical (passed in u)
+	cli := []string{
+        "zero",
+		"port",
+	}
+	var usage strings.Builder
+	usage.WriteString("Here is my usage help override!\n")
+	u.BuildFlagString(&usage, cli)
+	fmt.Println(usage.String())
+}
 
 func main() {
   if err := run(); err != nil {
@@ -54,6 +73,7 @@ func run() error {
   // use go struct
   config := struct {
     Port    int    `arg:"port"`
+    Zero    bool    `arg:"zero"`
   }{}
   if err = app.Marshal(&config); err != nil {
     return err
