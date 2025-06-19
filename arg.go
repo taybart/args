@@ -16,15 +16,17 @@ import (
 type Arg struct {
 	// in config if this is not defined long is used
 	// could also be embedded (ex. logs.verbose)
-	Name     string      `json:"name,omitempty"`
-	Short    string      `json:"short,omitempty"`
-	Help     string      `json:"help,omitempty"`
-	Required bool        `json:"required,omitempty"`
-	Default  interface{} `json:"default,omitempty"`
-	Type     string      `json:"type,omitempty"`
-	value    interface{}
-	wasSet   bool
-	isBool   bool
+	Name             string      `json:"name,omitempty"`
+	Short            string      `json:"short,omitempty"`
+	Help             string      `json:"help,omitempty"`
+	Required         bool        `json:"required,omitempty"`
+	Default          interface{} `json:"default,omitempty"`
+	Provided         bool        `json:"provided,omitempty"`
+	DoesNotNeedValue bool        `json:"doesNotNeedValue,omitempty"`
+	Type             string      `json:"type,omitempty"`
+	value            interface{}
+	wasSet           bool
+	isBool           bool
 	// new
 	Before func()
 	After  func()

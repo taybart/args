@@ -87,12 +87,14 @@ func (a *App) Parse() error {
 					log.Debug("didn't match", name)
 					continue
 				}
+				arg.Provided = true
 				if arg.isBool {
 					if name != "" {
 						arg.SetBool(true)
 					}
 					continue
 				}
+
 				if len(matches[0]) > 0 { // arg was set
 					if arg.Short == name || arg.Name == name {
 						value := matches[0][2]
@@ -104,12 +106,22 @@ func (a *App) Parse() error {
 						} else {
 							i++
 							if i > len(os.Args)-1 {
-								// this should also take into account if the user just didn't provide an arg
-								// and it was the last in the list
-								return fmt.Errorf("argument was not provided with a value, this might mean that it is a boolean and Default was not specified")
+								if arg.DoesNotNeedValue {
+									continue
+								}
+								// NOTE: argument was not provided with a value,
+								// 			 this might mean that it is a boolean and Default was not specified
+								errMsg := fmt.Errorf("argument %s requires a value", arg.Name)
+								if arg.Short != "" {
+									errMsg = fmt.Errorf("argument --%s/-%s requires a value", arg.Name, arg.Short)
+								}
+								return errMsg
 							}
 							next := os.Args[i]
 							if next[0] == '-' {
+								if arg.DoesNotNeedValue {
+									continue
+								}
 								return fmt.Errorf("flag given but argument (%s) not set", arg.Name)
 							}
 							err := arg.Set(next)
