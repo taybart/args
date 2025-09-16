@@ -126,6 +126,15 @@ func (arg *Arg) SetInt(value interface{}) error {
 	return nil
 }
 
+// UserSet check if the user provided a value
+func (arg Arg) UserSet() bool {
+	if arg.Default != nil {
+		return arg.Default != arg.value
+	}
+	return arg.wasSet
+}
+
+// IsSet check if the arg has a value (including being set by default)
 func (arg Arg) IsSet() bool {
 	if arg.Default != nil {
 		return true

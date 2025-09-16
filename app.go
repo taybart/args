@@ -34,6 +34,7 @@ func ToSemver(in string) Semver {
 /*********************************
  *************** App *************
  *********************************/
+
 type App struct {
 	Name          string          `json:"name,omitempty"`
 	Version       Semver          `json:"version,omitempty"`
@@ -158,6 +159,14 @@ func (a *App) Parse() error {
 		return err
 	}
 	return nil
+}
+
+// UserSet check if user provided the flag
+func (a App) UserSet(argName string) bool {
+	if a.Args[argName] == nil {
+		return false
+	}
+	return a.Args[argName].UserSet()
 }
 
 func (a *App) Validate() error {
