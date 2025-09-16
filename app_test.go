@@ -11,9 +11,6 @@ import (
 func TestNewApp(t *testing.T) {
 	is := is.New(t)
 
-	// Add cli args
-	os.Args = []string{"./test", "--message=test", "-p", "-n", "69"}
-
 	// Set up app
 	app := App{
 		Name:    "My App",
@@ -38,6 +35,9 @@ func TestNewApp(t *testing.T) {
 			},
 		},
 	}
+
+	// Add cli args
+	os.Args = []string{"./test", "--message=test", "-p", "-n", "69"}
 
 	err := app.Parse()
 	is.NoErr(err)

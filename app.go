@@ -70,9 +70,10 @@ func (a *App) Parse() error {
 		arg.init()
 	}
 
-	log.Verbosef("os.Args: %v\n", os.Args)
-	for i, v := range os.Args {
-		log.Debugf("trying to match: %v\n", v)
+	args := os.Args[1:] // remove program name
+	log.Verbosef("os.Args[1:] -> %v\n", args)
+	for i, v := range args {
+		log.Debugf("trying to match: args[%d] %v\n", i, v)
 		matches := flagRx.FindAllStringSubmatch(v, -1) // regexp each flag
 		log.Debugf("result: %v\n", matches)
 		for _, arg := range a.Args {
@@ -105,7 +106,7 @@ func (a *App) Parse() error {
 							}
 						} else {
 							i++
-							if i > len(os.Args)-1 {
+							if i > len(args)-1 {
 								if arg.DoesNotNeedValue {
 									continue
 								}
@@ -117,7 +118,7 @@ func (a *App) Parse() error {
 								}
 								return errMsg
 							}
-							next := os.Args[i]
+							next := args[i]
 							if next[0] == '-' {
 								if arg.DoesNotNeedValue {
 									continue
