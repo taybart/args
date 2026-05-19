@@ -43,6 +43,7 @@ type App struct {
 	ExitOnFailure bool            `json:"exit_on_failure"`
 	Args          map[string]*Arg `json:"args,omitempty"`
 	App           interface{}     // marshal result
+	rest          []string
 	// Override default Usage display function
 	UsageFunc    func(Usage)
 	overrideHelp bool
@@ -138,6 +139,32 @@ func (a *App) Parse() error {
 			}
 		}
 	}
+
+	consumed := make(map[int]bool)
+	for i, v := range args {
+		matches := flagRx.FindAllStringSubmatch(v, -1)
+		for _, arg := range a.Args {
+			if len(matches) > 0 {
+				name := matches[0][1]
+				if arg.Short == name || arg.Name == name {
+					consumed[i] = true
+					if !arg.isBool && (arg.Short == name || arg.Name == name) {
+						if matches[0][2] == "" && i+1 < len(args) {
+							consumed[i+1] = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for i, v := range args {
+		if !consumed[i] && !strings.HasPrefix(v, "-") {
+			a.rest = append(a.rest, v)
+		}
+	}
+	log.Verbosef("rest args: %v\n", a.rest)
+
 	var req string
 	for _, arg := range a.Args {
 		if arg.Required && !arg.IsSet() {
@@ -334,4 +361,15 @@ func (a *App) True(key string) bool {
 
 func (a *App) File(key string) []byte {
 	return a.Args[key].File()
+}
+
+func (a *App) Rest() []string {
+	return a.rest
+}
+
+func (a *App) Arg(n int) string {
+	if n < 0 || n >= len(a.rest) {
+		return ""
+	}
+	return a.rest[n]
 }

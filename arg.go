@@ -137,8 +137,12 @@ func (arg Arg) UserSet() bool {
 // IsSet check if the arg has a value (including being set by default)
 func (arg Arg) IsSet() bool {
 	if arg.Default != nil {
+		if s, ok := arg.value.(string); ok {
+			return s != ""
+		}
 		return true
 	}
+
 	return arg.wasSet
 }
 
