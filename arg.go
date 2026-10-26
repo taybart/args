@@ -16,10 +16,12 @@ import (
 type Arg struct {
 	// in config if this is not defined long is used
 	// could also be embedded (ex. logs.verbose)
-	Name             string      `json:"name,omitempty"`
-	Short            string      `json:"short,omitempty"`
-	Help             string      `json:"help,omitempty"`
-	Required         bool        `json:"required,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Short    string `json:"short,omitempty"`
+	Help     string `json:"help,omitempty"`
+	Required bool   `json:"required,omitempty"`
+	// TODO: make this flag for real RequiredWithout: "argName"
+	RequiredWithout  string      `json:"required_without,omitempty"`
 	Default          interface{} `json:"default,omitempty"`
 	Provided         bool        `json:"provided,omitempty"`
 	DoesNotNeedValue bool        `json:"doesNotNeedValue,omitempty"`

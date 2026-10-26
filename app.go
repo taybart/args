@@ -20,7 +20,7 @@ var (
 )
 
 var (
-	flagRx = regexp.MustCompile(`(?:-+)([[:alnum:]-_]+)(?:=| )?(.*)?`)
+	flagRx = regexp.MustCompile(`^(?:-+)([[:alnum:]-_]+)(?:=| )?(.*)?`)
 )
 
 type Semver string

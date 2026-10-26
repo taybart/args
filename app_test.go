@@ -48,6 +48,27 @@ func TestNewApp(t *testing.T) {
 
 }
 
+func TestValueContainingFlagName(t *testing.T) {
+	is := is.New(t)
+
+	// Set up app
+	app := App{
+		Args: map[string]*Arg{
+			"mode": {
+				Help: "Sets the mode",
+			},
+		},
+	}
+
+	// value "debug-mode" embeds "-mode", which used to be mistaken for
+	// the --mode flag itself on a second, unanchored regex pass
+	os.Args = []string{"./test", "--mode", "debug-mode"}
+
+	err := app.Parse()
+	is.NoErr(err)
+	is.True(app.Get("mode").String() == "debug-mode")
+}
+
 func TestDuplicateFlags(t *testing.T) {
 	is := is.New(t)
 
